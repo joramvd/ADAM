@@ -98,6 +98,13 @@ for c=1:numel(methods)
     if sum(strcmpi(methods{c},{'splines','spline'}))
         use_splines = true;
     end
+    
+    % plug-in tfdecomp package
+    if strcmpi(methods{c},'tfdecomp')
+        FT_or_tfdecomp = 'tfdecomp';
+    else
+        FT_or_tfdecomp = 'FT';
+    end
 end
 if ischar(frequencies)
     frequencies = str2num(frequencies);
@@ -124,7 +131,7 @@ if strcmp(method,'evoked')
     if use_splines
         FT_EVOKED = compute_spline_on_FT_EEG(FT_EVOKED);
     end
-    [TFR, groupTFR] = compute_TFR(FT_EVOKED,resample_to,frequencies);
+    [TFR, groupTFR] = compute_TFR(FT_EVOKED,resample_to,frequencies,FT_or_tfdecomp);
     clear FT_EVOKED;
     % TFR baseline
     if strcmpi(tf_baseline,'no')
@@ -153,7 +160,7 @@ if strcmp(method,'induced')
     FT_INDUCED = subtract_evoked_from_FT_EEG(FT_EEG,FT_EVOKED);
     clear FT_EVOKED;
     % compute the TFR
-    [TFR, groupTFR] = compute_TFR(FT_INDUCED,resample_to,frequencies);
+    [TFR, groupTFR] = compute_TFR(FT_INDUCED,resample_to,frequencies,FT_or_tfdecomp);
     clear FT_INDUCED;
     % TFR baseline
     if strcmpi(tf_baseline,'no')
@@ -175,8 +182,23 @@ end
 
 % if method is total
 if strcmp(method,'total')
+    
+    % remove unused trials
+    % --> copy-paste from subtract_evoked_from_FT_EEG.m; only for method 'induced' the non-used
+    % triggers seem to be removed in this function; so for 'total' they are kept in, thus
+    % creating an additional 'condition'
+    
+    index2remove = FT_EEG.trialinfo==-99;
+    disp(['removing ' num2str(sum(index2remove)) ' trials because they either do not belong to a complete subset or were not epoched at all']);
+    FT_EEG.trialinfo(index2remove) = []; % just keep the old trial info
+    FT_EEG.trial(index2remove,:,:) = [];
+    if isfield(FT_EEG,'sampleinfo');
+        FT_EEG.sampleinfo(index2remove,:) = [];
+    end
+
+    
     % compute the TFR
-    [TFR, groupTFR] = compute_TFR(FT_EEG,resample_to,frequencies);
+    [TFR, groupTFR] = compute_TFR(FT_EEG,resample_to,frequencies,FT_or_tfdecomp);
     % TFR baseline
     if strcmpi(tf_baseline,'no')
         disp('no TF baseline applied');

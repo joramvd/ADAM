@@ -292,33 +292,33 @@ nameOfStruct2Update = 'cfg';
 cfg = v2struct(rawstats,rawchance,inverty,acclim,acctick,chance,cent_acctick,line_colors,ndec,plottype,singleplot,swapaxes,referenceline,nameOfStruct2Update);
 
 % make figure?
-if ~plotsubjects
-    title_text = regexprep(regexprep(regexprep(folder,'\\','/'),regexprep(startdir,'\\','/'),''),'_',' ');
-    if numel(stats) == 1
-        title_text = title_text(1:find(title_text=='/',1,'last')-1);
-    end
-    fh = figure('name',title_text);
-    % make sure all figures have the same size regardless of nr of subplots
-    % and make sure they fit on the screen
-    screensize = get(0,'screensize'); % e.g. 1920 * 1080
-    if singleplot
-        UL = screensize([3 4])-50; % subtract a little to be on the save side
-    else
-        UL = (screensize([3 4])-50)./[numSubplots(numel(stats),ax2) numSubplots(numel(stats),ax1)];
-    end
-    if any(UL>[500 400])
-        UL=[500 400]; % take this as default
-    end
-    po=get(fh,'position');
-    if singleplot
-        po(3:4)=UL;
-    else
-        po(3:4)=UL.*[numSubplots(numel(stats),ax2) numSubplots(numel(stats),ax1)];
-    end
-    po(1:2) = (screensize(3:4)-po(3:4))/2; po(logical([po(1:2)<100 0 0])) = round(po(logical([po(1:2)<100 0 0]))/4); % position in the center, push further to left / bottom if there is little space on horizontal or vertical axis axis
-    set(fh,'position',po);
-    set(fh,'color','w');
-end
+% if ~plotsubjects
+%     title_text = regexprep(regexprep(regexprep(folder,'\\','/'),regexprep(startdir,'\\','/'),''),'_',' ');
+%     if numel(stats) == 1
+%         title_text = title_text(1:find(title_text=='/',1,'last')-1);
+%     end
+%     fh = figure('name',title_text);
+%     % make sure all figures have the same size regardless of nr of subplots
+%     % and make sure they fit on the screen
+%     screensize = get(0,'screensize'); % e.g. 1920 * 1080
+%     if singleplot
+%         UL = screensize([3 4])-50; % subtract a little to be on the save side
+%     else
+%         UL = (screensize([3 4])-50)./[numSubplots(numel(stats),ax2) numSubplots(numel(stats),ax1)];
+%     end
+%     if any(UL>[500 400])
+%         UL=[500 400]; % take this as default
+%     end
+%     po=get(fh,'position');
+%     if singleplot
+%         po(3:4)=UL;
+%     else
+%         po(3:4)=UL.*[numSubplots(numel(stats),ax2) numSubplots(numel(stats),ax1)];
+%     end
+%     po(1:2) = (screensize(3:4)-po(3:4))/2; po(logical([po(1:2)<100 0 0])) = round(po(logical([po(1:2)<100 0 0]))/4); % position in the center, push further to left / bottom if there is little space on horizontal or vertical axis axis
+%     set(fh,'position',po);
+%     set(fh,'color','w');
+% end
 
 % main routine
 if numel(stats)>1
@@ -407,12 +407,12 @@ if isempty(freqtick)
 end
 
 % first a hack to change make sure that whatever is in time is expressed as ms
-if mean(times{1}<10)
-    times{1} = round(times{1} * 1000);
-    if numel(times) > 1
-        times{2} = round(times{2} * 1000);
-    end
-end
+% if mean(times{1}<10)
+%     times{1} = round(times{1} * 1000);
+%     if numel(times) > 1
+%         times{2} = round(times{2} * 1000);
+%     end
+% end
 
 % determine axes
 if strcmpi(reduce_dims,'avtrain') 
@@ -581,7 +581,9 @@ if strcmpi(plottype,'2D')
     
     % plot help line
     if ~isempty(referenceline)
-        plot([nearest(xaxis,referenceline),nearest(xaxis,referenceline)],[acclim(1),acclim(2)],'k--');
+        for refi=1:length(referenceline)
+            plot([nearest(xaxis,referenceline(refi)),nearest(xaxis,referenceline(refi))],[acclim(1),acclim(2)],'k--');
+        end
     end
     
     % plot significant time points
@@ -633,11 +635,11 @@ if strcmpi(plottype,'2D')
     end
     xlim([1 numel(data)]);
     if strcmpi(reduce_dims,'avtrain')
-        xlabel('test time in ms','FontSize',fontsize);
+        xlabel('test time in s','FontSize',fontsize);
     elseif strcmpi(reduce_dims,'avtest')
-        xlabel('train time in ms','FontSize',fontsize);
+        xlabel('train time in s','FontSize',fontsize);
     else
-        xlabel('time in ms','FontSize',fontsize);
+        xlabel('time in s','FontSize',fontsize);
     end
     % if we are plotting dif stats together with raw stats, put them on a second axis
     if ~isempty(rawstats) && (~isempty(strfind(measuremethod,' difference')) || ~isempty(strfind(measuremethod,' correlation'))) && singleplot
@@ -677,10 +679,10 @@ else
     end
     if strcmpi(ydim,'freq')
         ylegend = 'frequency in Hz';
-        xlegend = 'time in ms';
+        xlegend = 'time in s';
     else
-        ylegend = 'testing time in ms';
-        xlegend = 'training time in ms';
+        ylegend = 'testing time in s';
+        xlegend = 'training time in s';
     end
     if swapaxes
         data = permute(data,[2 1 3]);
@@ -696,10 +698,12 @@ else
     % plot some help lines
     if ~isempty(referenceline)
         hold on;
-        timeinms = referenceline;
-        plot([nearest(xaxis,timeinms),nearest(xaxis,timeinms)],[nearest(yaxis,min(yaxis)),nearest(yaxis,max(yaxis))],'k--');
-        plot([nearest(xaxis,min(xaxis)),nearest(xaxis,max(xaxis))],[nearest(yaxis,timeinms),nearest(yaxis,timeinms)],'k--');
-        % plot([nearest(xaxis,min(xaxis)),nearest(xaxis,max(xaxis))],[nearest(yaxis,min(yaxis)),nearest(yaxis,max(yaxis))],'k--');
+        for refi=1:length(referenceline)
+            timeinms = referenceline(refi);
+            plot([nearest(xaxis,timeinms),nearest(xaxis,timeinms)],[nearest(yaxis,min(yaxis)),nearest(yaxis,max(yaxis))],'k--');
+            plot([nearest(xaxis,min(xaxis)),nearest(xaxis,max(xaxis))],[nearest(yaxis,timeinms),nearest(yaxis,timeinms)],'k--');
+            % plot([nearest(xaxis,min(xaxis)),nearest(xaxis,max(xaxis))],[nearest(yaxis,min(yaxis)),nearest(yaxis,max(yaxis))],'k--');
+        end
     end
     
     % set ticks on color bar

@@ -15,7 +15,7 @@ function [FT_EEG, boollist] = muscle_removal(EEG,outfile,clean_window,cutoff)
 % NEED TO FIGURE OUT HOW cfg.padtype = 'mirror' WORKS, SEE http://www.fieldtriptoolbox.org/reference/ft_preprocessing
 
 if nargin<4
-    cutoff = -3;
+    cutoff = -12;
 end
 if nargin<3
     clean_window = [];
